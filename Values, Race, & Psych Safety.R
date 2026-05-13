@@ -195,9 +195,9 @@ values$values <- paste(values$Value1, values$Value2, values$Value3, values$Value
 values$values <- tolower(values$values); values$values[values$values == "na, na, na, na, na"] <- NA
 
 # import GloVe (https://nlp.stanford.edu/data/wordvecs/glove.2024.wikigiga.300d.zip)
-glove <- read_table("~/Dropbox/Other/Data/wiki_giga_2024_300_MFT20_vectors_seed_2024_alpha_0.75_eta_0.05_combined.txt", col_names=F)
+glove <- read_table("~/Dropbox/Other/wiki_giga_2024_300_MFT20_vectors_seed_2024_alpha_0.75_eta_0.05_combined.txt", col_names=F)
 glove <- as.data.frame(glove)
-rownames(glove) <- glove[,1]
+rownames(glove) <- glove$X1
 glove <- glove[,2:ncol(glove)]
 glove <- as.matrix(glove)
 
@@ -222,9 +222,9 @@ dyads <- values %>%
 # ... calculate value similarity via pairwise mean cosine sim
 dyads$valueSimil <- NA
 for (i in 1:nrow(dyads)) {
-  subj <- unlist(dyads$subj.values.list[i])
-  eval <- unlist(dyads$eval.values.list[i])
-  
+  subj <- unlist(str_split(dyads$subj.values.list[i], ", "))
+  eval <- unlist(str_split(dyads$eval.values.list[i], ", "))
+
   valueDf <- matrix(0, nrow = 5, ncol = 5)
   
   for (j in 1:5) {
@@ -245,11 +245,17 @@ for (i in 1:nrow(dyads)) {
   rowMeansValue <- rowMeans(valueDf, na.rm = TRUE)
   dyads$valueSimil[i] <- mean(rowMeansValue, na.rm = TRUE)
 }
-rm(valueDf, subj, eval, i, j, k)
+rm(valueDf, rowMeansValue, subj, eval, i, j, k)
 
-scores <- dyads %>% group_by(uniqueID, uniqueTeam) %>%
-  summarise(valueSimil = mean(valueSimil, na.rm=T))
+scores <- dyads %>% group_by(subj_id, uniqueTeam) %>%
+  summarise(valueSimil = mean(valueSimil, na.rm=T)) %>%
+  rename("uniqueID"="subj_id")
 values <- merge(values, scores, by=c("uniqueID", "uniqueTeam"))
 rm(dyads, scores, glove)
 
-save.image("~/Dropbox/Values, Race, & Psych Safety/Data/R Environment 05.11.26.Rdata")
+# merge data --------------------------------------------------------------
+
+df <- merge(demos, inventory, by=c("uniqueID", "uniqueTeam"), all=T)
+df <- merge(df, values, by=c("uniqueID", "uniqueTeam"), all=T)
+
+save.image("~/Dropbox/Values, Race, & Psych Safety/Data/R Environment 05.13.26.Rdata")
