@@ -253,6 +253,43 @@ scores <- dyads %>% group_by(subj_id, uniqueTeam) %>%
 values <- merge(values, scores, by=c("uniqueID", "uniqueTeam"))
 rm(dyads, scores, glove)
 
+################################################
+## spot checking value similarity calculation ##
+################################################
+
+# # spot check using subject id = 333759771_fa23
+# check <- dyads %>% filter(subj_id == "333759771_fa23")
+# 
+# check$valueSimil <- NA
+# for (i in 1:nrow(check)) {
+#   subj <- unlist(str_split(check$subj.values.list[i], ", "))
+#   eval <- unlist(str_split(check$eval.values.list[i], ", "))
+#   
+#   valueDf <- matrix(0, nrow = 5, ncol = 5)
+#   
+#   for (j in 1:5) {
+#     for (k in 1:5) {
+#       if (!subj[j] %in% rownames(glove) | !eval[k] %in% rownames(glove)) {
+#         valueDf[j, k] <- NA
+#       } else {
+#         valueDf[j, k] <- text2vec::sim2(
+#           x = glove[subj[j], , drop = FALSE],
+#           y = glove[eval[k], , drop = FALSE],
+#           method = "cosine", 
+#           norm = "l2"
+#         )
+#       }
+#     }
+#   }
+#   
+#   rowMeansValue <- rowMeans(valueDf, na.rm = TRUE)
+#   check$valueSimil[i] <- mean(rowMeansValue, na.rm = TRUE)
+# }
+# rm(valueDf, rowMeansValue, subj, eval, i, j, k)
+# 
+# # spot check: do cells correspond with actual matches? YES!
+# text2vec::sim2(glove["impact", , drop=FALSE], glove["loyalty", , drop=FALSE], method="cosine", norm="l2") # = .2114262 
+
 # merge data --------------------------------------------------------------
 
 df <- merge(demos, inventory, by=c("uniqueID", "uniqueTeam"), all=T)
