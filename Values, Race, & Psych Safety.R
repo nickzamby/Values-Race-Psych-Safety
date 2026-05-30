@@ -1,7 +1,11 @@
 library(tidyverse)
 library(psych)
 library(apaTables)
+library(report)
+library(lme4)
+library(afex)
 
+set.seed(123)
 
 # learning team roster ----------------------------------------------------
 
@@ -296,3 +300,59 @@ df <- merge(demos, inventory, by=c("uniqueID", "uniqueTeam"), all=T)
 df <- merge(df, values, by=c("uniqueID", "uniqueTeam"), all=T)
 
 save.image("~/Dropbox/Values, Race, & Psych Safety/Data/R Environment 05.13.26.Rdata")
+
+# data analysis -----------------------------------------------------------
+
+load("~/Dropbox/Values, Race, & Psych Safety/Data/R Environment 05.13.26.Rdata")
+
+# DV = PsychSafety, IV = dum.race
+report(t.test(df$PsychSafety[df$dum.race == 1], df$PsychSafety[df$dum.race==0]))
+
+df$race_ethnicity = relevel(as.factor(df$race_ethnicity), ref="White/European American")
+report(lm(PsychSafety ~ race_ethnicity, df))
+report(lm(PsychSafety ~ dum.race, df))
+
+  ## alternative model (not pre-registered)
+  report(lmer(PsychSafety ~ race_ethnicity + (1|uniqueTeam), REML=F, df))
+  report(lmer(PsychSafety ~ dum.race + (1|uniqueTeam), REML=F, df))
+
+  # DV = PsychSafety, IVs = dum.race, prop_same.race
+report(lm(PsychSafety ~ prop_same.race, df))
+
+report(lm(PsychSafety ~ race_ethnicity*prop_same.race, df))
+report(lm(PsychSafety ~ dum.race*prop_same.race, df))
+
+  ## alternative model (not pre-registered)
+  report(lmer(PsychSafety ~ race_ethnicity*prop_same.race + (1|uniqueTeam), REML=F, df))
+  report(lmer(PsychSafety ~ dum.race*prop_same.race + (1|uniqueTeam), REML=F, df))
+
+# DV = PsychSafety, IVs = dum.race, valueSimil
+report(lm(PsychSafety ~ valueSimil, df))
+
+report(lm(PsychSafety ~ race_ethnicity*valueSimil, df))
+report(lm(PsychSafety ~ dum.race*valueSimil, df))
+
+  ## alternative model (not pre-registered)
+  report(lmer(PsychSafety ~ race_ethnicity*valueSimil + (1|uniqueTeam), REML=F, df))
+  report(lmer(PsychSafety ~ dum.race*valueSimil + (1|uniqueTeam), REML=F, df))
+  
+# exploratory (pre-registered) --------------------------------------------
+
+# DV = TeamEfficacy, IV = dum.race
+t.test(df$TeamEfficacy[df$dum.race == 1], df$TeamEfficacy[df$dum.race == 0])
+
+# DV = TeamPerformance, IV = dum.race
+t.test(df$TeamPerformance[df$dum.race == 1], df$TeamPerformance[df$dum.race == 0])
+
+# DV = Overall, IV = dum.race
+t.test(df$Overall[df$dum.race == 1], df$Overall[df$dum.race == 0])
+
+# exploratory (not pre-registered) ----------------------------------------
+
+# DV = PsychSafety, IVs = dum.race, prop_same.race, valueSimil
+report(lm(PsychSafety ~ dum.race*prop_same.race*valueSimil, df))
+  
+  ## alternative model (not pre-registered)
+  report(lmer(PsychSafety ~ dum.race*prop_same.race*valueSimil + (1|uniqueTeam), df))
+
+
